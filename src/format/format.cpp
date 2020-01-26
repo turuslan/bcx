@@ -1,7 +1,9 @@
+#include <ed25519/ed25519/sha256.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
 
+#include "gen/pb/block.pb.h"
 #include "format/format.hpp"
 
 namespace bcx {
@@ -13,6 +15,23 @@ namespace bcx {
       } catch (const boost::algorithm::hex_decode_error &) {
         return false;
       }
+    }
+
+    std::string hex(const Byte *begin, size_t size) {
+      std::string res(size * 2, '\0');
+      boost::algorithm::hex_lower(begin, begin + size, res.begin());
+      return res;
+    }
+
+    Sha256 sha256(const std::string &bytes) {
+      Sha256 res;
+      ::sha256(
+          res.data(), reinterpret_cast<const Byte *>(bytes.data()), bytes.size());
+      return res;
+    }
+
+    size_t blockHeight(const iroha::protocol::Block &block) {
+      return block.block_v1().payload().height();
     }
   }  // namespace format
 

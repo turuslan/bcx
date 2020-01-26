@@ -18,6 +18,17 @@ namespace bcx {
       }
       return c;
     }
+
+    std::string hex(const Byte *begin, size_t size);
+
+    template <typename C>
+    std::string hex(const C &bytes) {
+      return hex(std::data(bytes), std::size(bytes));
+    }
+
+    Sha256 sha256(const std::string &bytes);
+
+    size_t blockHeight(const iroha::protocol::Block &block);
   }  // namespace format
 
   namespace logger = spdlog;
