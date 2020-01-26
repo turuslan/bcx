@@ -1,0 +1,4 @@
+Source: belle
+Version: 0.5.1
+Build-Depends: boost-beast
+Description: An HTTP / Websocket library in C++17 using Boost.Beast and Boost.ASIO
