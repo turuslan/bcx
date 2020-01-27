@@ -1,24 +1,111 @@
+#include <fstream>
+
 #include "db/db.hpp"
 #include "format/format.hpp"
 #include "gen/pb/block.pb.h"
 
+namespace bcx {
+  LenIndex::LenIndex() {
+    offset.push_back(0);
+  }
+
+  size_t LenIndex::count() const {
+    return offset.size() - 1;
+  }
+
+  size_t LenIndex::size() const {
+    return offset.back();
+  }
+
+  size_t LenIndex::size(size_t i) const {
+    return offset[i + 1] - offset[i];
+  }
+
+  void LenIndex::add(size_t n) {
+    offset.push_back(size() + n);
+  }
+
+  void LenIndex::truncate(size_t n) {
+    if (n > count()) {
+      fatal("LenIndex::truncate invalid argument");
+    }
+    offset.resize(n + 1);
+  }
+
+  void LenBytes::add(const std::string &str) {
+    len.add(str.size());
+    bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
+  }
+
+  void LenBytes::truncate(size_t n) {
+    len.truncate(n);
+    bytes.resize(len.size());
+  }
+
+  std::string LenBytes::str(size_t i) {
+    return {b2c(bytes.data() + len.offset[i]), len.size(i)};
+  }
+}  // namespace bcx
+
 namespace bcx::db {
+  constexpr auto kBlockCache = "block.cache";
+
+  static LenBytes block_bytes;
   static size_t block_count;
   static size_t tx_count;
   static size_t account_count;
   static size_t peer_count;
+  static std::ofstream appender;
+
+  void truncate(size_t n) {
+    block_bytes.truncate(n);
+    std::ofstream(kBlockCache, std::ios::binary | std::ios::trunc)
+        .write(b2c(block_bytes.bytes.data()), block_bytes.bytes.size());
+  }
 
   void load() {
     auto load_start_time = std::chrono::system_clock::now();
 
-    auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - load_start_time);
-    logger::info("loaded {} blocks with {} transactions in {} sec", blockCount(), txCount(), load_duration.count());
+    block_bytes.bytes = format::readBytes(kBlockCache);
+    format::splitPb(block_bytes.len, block_bytes.bytes);
+    auto extra = block_bytes.bytes.size() - block_bytes.len.size();
+    if (extra) {
+      logger::warn("Block cache corrupted, truncating {} bytes", extra);
+      truncate(block_bytes.len.count());
+    }
+    iroha::protocol::Block block;
+    for (auto i = 0u; i < block_bytes.len.count(); ++i) {
+      if (!block.ParseFromArray(
+              block_bytes.bytes.data() + block_bytes.len.offset[i],
+              block_bytes.len.size(i))) {
+        logger::warn("Cached block {} corrupted, truncating {} blocks",
+                     i + 1,
+                     block_bytes.len.count() - i);
+        truncate(i);
+        break;
+      }
+      addBlock(block);
+    }
+    appender.open(kBlockCache, std::ios::binary | std::ios::app);
+
+    auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now() - load_start_time);
+    logger::info("Loaded {} blocks with {} transactions in {} sec",
+                 blockCount(),
+                 txCount(),
+                 load_duration.count());
   }
 
   void addBlock(const iroha::protocol::Block &block) {
     auto height = format::blockHeight(block);
     if (height != block_count + 1) {
       fatal("Expected block {} got {}", block_count + 1, height);
+    }
+    if (height > block_bytes.len.count()) {
+      auto bytes = block.SerializeAsString();
+      block_bytes.add(bytes);
+      appender.write(bytes.data(), bytes.size());
+      appender.flush();
     }
     ++block_count;
     for (auto &tx_wrap : block.block_v1().payload().transactions()) {

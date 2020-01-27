@@ -1,10 +1,13 @@
 #include <ed25519/ed25519/sha256.h>
+#include <google/protobuf/io/coded_stream.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
+#include <fstream>
 
-#include "gen/pb/block.pb.h"
+#include "db/db.hpp"
 #include "format/format.hpp"
+#include "gen/pb/block.pb.h"
 
 namespace bcx {
   namespace format {
@@ -25,13 +28,48 @@ namespace bcx {
 
     Sha256 sha256(const std::string &bytes) {
       Sha256 res;
-      ::sha256(
-          res.data(), reinterpret_cast<const Byte *>(bytes.data()), bytes.size());
+      ::sha256(res.data(), c2b(bytes.data()), bytes.size());
       return res;
     }
 
     size_t blockHeight(const iroha::protocol::Block &block) {
       return block.block_v1().payload().height();
+    }
+
+    template <typename C>
+    C read(const std::string &path) {
+      std::ifstream file(path, std::ios::binary | std::ios::ate);
+      C res;
+      if (file.good()) {
+        res.resize(file.tellg());
+        file.seekg(0, std::ios::beg);
+        file.read(b2c(std::data(res)), std::size(res));
+      }
+      return res;
+    }
+
+    std::vector<Byte> readBytes(const std::string &path) {
+      return read<std::vector<Byte>>(path);
+    }
+
+    void splitPb(LenIndex &len, const std::vector<Byte> &bytes) {
+      len = LenIndex{};
+      google::protobuf::io::CodedInputStream stream{
+          bytes.data(), static_cast<int>(bytes.size())};
+      auto offset = 0;
+      while (true) {
+        if (!stream.ReadTag()) {
+          break;
+        }
+        int skip;
+        if (!stream.ReadVarintSizeAsInt(&skip)) {
+          break;
+        }
+        if (!stream.Skip(skip)) {
+          break;
+        }
+        len.offset.push_back(stream.CurrentPosition());
+      }
     }
   }  // namespace format
 
@@ -71,7 +109,8 @@ namespace bcx {
     }
 
     if (getenv("DISABLE_SYNC", "0") != "1") {
-      auto iroha_account_key = format::unhex<EDKey>(getenv("IROHA_ACCOUNT_KEY"));
+      auto iroha_account_key =
+          format::unhex<EDKey>(getenv("IROHA_ACCOUNT_KEY"));
       if (!iroha_account_key) {
         fatal("Invalid IROHA_ACCOUNT_KEY format", log_level);
       }

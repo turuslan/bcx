@@ -102,14 +102,14 @@ namespace bcx {
   void syncBlock(boost::asio::io_context &io,
                  const iroha::protocol::Block &block) {
     io.post([block]() {
-      logger::info("sync block {}", format::blockHeight(block));
+      logger::info("Sync block {}", format::blockHeight(block));
       db::addBlock(block);
     });
   }
 
   void runSync(boost::asio::io_context &io) {
     IrohaApi api{*config.iroha};
-    logger::info("sync start");
+    logger::info("Sync start");
     auto stream = api.fetchCommits();
     auto height = db::blockCount() + 1;
     iroha::protocol::Block block;
@@ -117,7 +117,7 @@ namespace bcx {
       syncBlock(io, block);
       ++height;
     }
-    io.post([block]() { logger::info("sync wait for new blocks"); });
+    io.post([block]() { logger::info("Sync wait for new blocks"); });
     iroha::protocol::BlockQueryResponse res;
     while (stream.first->Read(&res)) {
       if (res.has_block_error_response()) {
@@ -132,6 +132,6 @@ namespace bcx {
     if (!status.ok()) {
       fatal("GRPC error {}", status.error_message());
     }
-    logger::info("sync stop");
+    logger::info("Sync stop");
   }
 }  // namespace bcx

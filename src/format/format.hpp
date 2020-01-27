@@ -7,6 +7,8 @@
 #include "types.hpp"
 
 namespace bcx {
+  struct LenIndex;
+
   namespace format {
     bool unhex(const std::string &str, Byte *out);
 
@@ -29,12 +31,16 @@ namespace bcx {
     Sha256 sha256(const std::string &bytes);
 
     size_t blockHeight(const iroha::protocol::Block &block);
+
+    std::vector<Byte> readBytes(const std::string &path);
+
+    void splitPb(LenIndex &len, const std::vector<Byte> &bytes);
   }  // namespace format
 
   namespace logger = spdlog;
 
-  template <typename ...T>
-  void fatal(T &&...args) {
+  template <typename... T>
+  void fatal(T &&... args) {
     logger::error(std::forward<T>(args)...);
     exit(-1);
   }

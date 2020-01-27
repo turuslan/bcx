@@ -1,7 +1,31 @@
 #ifndef BCX_DB_DB_HPP
 #define BCX_DB_DB_HPP
 
+#include <vector>
+
 #include "types.hpp"
+
+namespace bcx {
+  struct LenIndex {
+    LenIndex();
+    size_t count() const;
+    size_t size() const;
+    size_t size(size_t i) const;
+    void add(size_t n);
+    void truncate(size_t n);
+
+    std::vector<size_t> offset;
+  };
+
+  struct LenBytes {
+    void add(const std::string &str);
+    void truncate(size_t n);
+    std::string str(size_t i);
+
+    std::vector<Byte> bytes;
+    LenIndex len;
+  };
+}  // namespace bcx
 
 namespace bcx::db {
   void load();
