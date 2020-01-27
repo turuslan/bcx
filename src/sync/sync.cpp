@@ -2,6 +2,7 @@
 #include <grpcpp/grpcpp.h>
 #include <boost/asio/io_context.hpp>
 
+#include "db/db.hpp"
 #include "format/format.hpp"
 #include "gen/pb/endpoint.grpc.pb.h"
 #include "sync/sync.hpp"
@@ -102,6 +103,7 @@ namespace bcx {
                  const iroha::protocol::Block &block) {
     io.post([block]() {
       logger::info("sync block {}", format::blockHeight(block));
+      db::addBlock(block);
     });
   }
 
@@ -109,7 +111,7 @@ namespace bcx {
     IrohaApi api{*config.iroha};
     logger::info("sync start");
     auto stream = api.fetchCommits();
-    auto height = 1u;
+    auto height = db::blockCount() + 1;
     iroha::protocol::Block block;
     while (api.getBlock(block, height)) {
       syncBlock(io, block);

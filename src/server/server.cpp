@@ -1,5 +1,6 @@
 #include <belle.hh>
 
+#include "db/db.hpp"
 #include "format/format.hpp"
 #include "server/server.hpp"
 
@@ -11,6 +12,23 @@ namespace bcx {
     app->on_http("/health", Method::get, [](auto &ctx) {
       ctx.res.set(kContentType, "application/json");
       ctx.res.body() = "{\"status\":\"UP\"}";
+    });
+
+    app->on_http("/metrics", Method::get, [](auto &ctx) {
+      std::stringstream s;
+      auto counter = [&s](const std::string &type, size_t count) {
+        auto key = "explorer_" + type + "_total";
+        s << "#HELP " << key << " " << type << " count\n";
+        s << "#TYPE " << key << " counter\n";
+        s << key << " " << count << "\n";
+        s << "\n";
+      };
+      counter("blocks", db::blockCount());
+      counter("transactions", db::txCount());
+      counter("accounts", db::accountCount());
+      counter("peers", db::peerCount());
+      ctx.res.set(kContentType, "text/plain");
+      ctx.res.body() = s.str();
     });
 
     app->on_http("/logLevel", Method::post, [](auto &ctx) {

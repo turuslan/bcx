@@ -1,11 +1,13 @@
 #include <thread>
 
+#include "db/db.hpp"
 #include "format/format.hpp"
 #include "server/server.hpp"
 #include "sync/sync.hpp"
 
 int main() {
   bcx::config.load();
+  bcx::db::load();
   bcx::Server server;
   auto &io = server.io();
   std::thread sync;

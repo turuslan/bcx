@@ -17,19 +17,19 @@ jobs:
         key: vcpkg-installed-${{ runner.os }}-${{ hashFiles('vcpkg/**') }}
     - name: vcpkg cache init
       if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-      run: ln -s $VCPKG_INSTALLATION_ROOT/installed vcpkg-installed
+      run: |
+        ln -s $VCPKG_INSTALLATION_ROOT/installed vcpkg-installed
+        vcpkg install $(cat vcpkg/VCPKG_DEPS_LIST)
     - name: vcpkg cache apply
       if: steps.vcpkg-cache.outputs.cache-hit == 'true'
       run: |
         rm -rf $VCPKG_INSTALLATION_ROOT/installed
         ln -s `pwd`/vcpkg-installed $VCPKG_INSTALLATION_ROOT/installed
-    - name: vcpkg install
-      run: vcpkg install $(cat vcpkg/VCPKG_DEPS_LIST)
     - name: cmake
       env:
         CC: clang
         CXX: clang++
-      run: cmake . -Bbuild -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
+      run: cmake . -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
     - name: build
       run: |
         cmake --build build -- -j2
