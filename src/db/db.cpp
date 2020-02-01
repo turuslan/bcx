@@ -21,7 +21,7 @@ namespace bcx {
     return offset[i + 1] - offset[i];
   }
 
-  void LenIndex::add(size_t n) {
+  void LenIndex::push_back(size_t n) {
     offset.push_back(size() + n);
   }
 
@@ -32,8 +32,8 @@ namespace bcx {
     offset.resize(n + 1);
   }
 
-  void LenBytes::add(const std::string &str) {
-    len.add(str.size());
+  void LenBytes::push_back(const std::string &str) {
+    len.push_back(str.size());
     bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
   }
 
@@ -103,7 +103,7 @@ namespace bcx::db {
     }
     if (height > block_bytes.len.count()) {
       auto bytes = block.SerializeAsString();
-      block_bytes.add(bytes);
+      block_bytes.push_back(bytes);
       appender.write(bytes.data(), bytes.size());
       appender.flush();
     }
