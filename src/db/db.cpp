@@ -13,7 +13,7 @@ namespace bcx {
     return offset.size() - 1;
   }
 
-  size_t LenIndex::size() const {
+  size_t LenIndex::size_bytes() const {
     return offset.back();
   }
 
@@ -22,7 +22,7 @@ namespace bcx {
   }
 
   void LenIndex::push_back(size_t n) {
-    offset.push_back(size() + n);
+    offset.push_back(size_bytes() + n);
   }
 
   void LenIndex::truncate(size_t n) {
@@ -39,7 +39,7 @@ namespace bcx {
 
   void LenBytes::truncate(size_t n) {
     len.truncate(n);
-    bytes.resize(len.size());
+    bytes.resize(len.size_bytes());
   }
 
   std::string LenBytes::str(size_t i) {
@@ -68,7 +68,7 @@ namespace bcx::db {
 
     block_bytes.bytes = format::readBytes(kBlockCache);
     format::splitPb(block_bytes.len, block_bytes.bytes);
-    auto extra = block_bytes.bytes.size() - block_bytes.len.size();
+    auto extra = block_bytes.bytes.size() - block_bytes.len.size_bytes();
     if (extra) {
       logger::warn("Block cache corrupted, truncating {} bytes", extra);
       truncate(block_bytes.len.count());

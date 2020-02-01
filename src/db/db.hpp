@@ -9,7 +9,7 @@ namespace bcx {
   struct LenIndex {
     LenIndex();
     size_t count() const;
-    size_t size() const;
+    size_t size_bytes() const;
     size_t size(size_t i) const;
     void push_back(size_t n);
     void truncate(size_t n);
