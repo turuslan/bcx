@@ -12,6 +12,7 @@ namespace bcx::db {
   DEFINE_STATIC(block_hash);
   static size_t tx_count;
   DEFINE_STATIC(tx_hash);
+  DEFINE_STATIC(tx_creator);
   static size_t account_count;
   DEFINE_STATIC(account_id);
   static size_t peer_count;
@@ -119,6 +120,7 @@ namespace bcx::db {
             break;
         }
       }
+      tx_creator.push_back(*account_id.find(tx_payload.creator_account_id()));
     }
   }
 
