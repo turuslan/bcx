@@ -32,7 +32,8 @@ namespace bcx::db {
     }
     iroha::protocol::Block block;
     for (auto i = 0u; i < block_bytes.size(); ++i) {
-      if (!block.ParseFromString(block_bytes[i].str())) {
+      auto block_span = block_bytes[i];
+      if (!block.ParseFromArray(block_span.data(), block_span.size())) {
         logger::warn("Cached block {} corrupted, truncating {} blocks",
                      i + 1,
                      block_bytes.size() - i);

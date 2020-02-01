@@ -29,13 +29,6 @@ namespace bcx::ds {
     offset_.resize(n + 1);
   }
 
-  String::String(const Byte *ptr, size_t size) : ptr_{ptr}, size_{size} {
-  }
-
-  std::string String::str() const {
-    return {b2c(ptr_), size_};
-  }
-
   size_t Strings::size() const {
     return len.size();
   }
@@ -44,11 +37,11 @@ namespace bcx::ds {
     return len.size_bytes();
   }
 
-  String Strings::operator[](size_t i) const {
-    return {bytes.data() + len.offset(i), len.size(i)};
+  std::string_view Strings::operator[](size_t i) const {
+    return {b2c(bytes.data() + len.offset(i)), len.size(i)};
   }
 
-  void Strings::push_back(const std::string &str) {
+  void Strings::push_back(const std::string_view &str) {
     len.push_back(str.size());
     bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
   }
