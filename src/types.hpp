@@ -14,11 +14,19 @@ namespace bcx {
   using EDKey = std::array<Byte, 32>;
   using Sha256 = std::array<Byte, 32>;
 
-  inline char *b2c(Byte *ptr) {
+  inline auto b2c(Byte *ptr) {
     return reinterpret_cast<char *>(ptr);
   }
 
-  inline const Byte *c2b(const char *ptr) {
+  inline auto b2c(const Byte *ptr) {
+    return reinterpret_cast<const char *>(ptr);
+  }
+
+  inline auto c2b(char *ptr) {
+    return reinterpret_cast<Byte *>(ptr);
+  }
+
+  inline auto c2b(const char *ptr) {
     return reinterpret_cast<const Byte *>(ptr);
   }
 }  // namespace bcx
