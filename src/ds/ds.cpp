@@ -35,4 +35,26 @@ namespace bcx::ds {
   std::string String::str() const {
     return {b2c(ptr_), size_};
   }
+
+  size_t Strings::size() const {
+    return len.size();
+  }
+
+  size_t Strings::size_bytes() const {
+    return len.size_bytes();
+  }
+
+  String Strings::operator[](size_t i) const {
+    return {bytes.data() + len.offset(i), len.size(i)};
+  }
+
+  void Strings::push_back(const std::string &str) {
+    len.push_back(str.size());
+    bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
+  }
+
+  void Strings::truncate(size_t n) {
+    len.truncate(n);
+    bytes.resize(size_bytes());
+  }
 }  // namespace bcx

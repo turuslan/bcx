@@ -28,6 +28,17 @@ namespace bcx::ds {
     const Byte *ptr_;
     size_t size_;
   };
+
+  struct Strings {
+    size_t size() const;
+    size_t size_bytes() const;
+    String operator[](size_t i) const;
+    void push_back(const std::string &str);
+    void truncate(size_t n);
+
+    std::vector<Byte> bytes;
+    Len len;
+  };
 }  // namespace bcx::ds
 
 #endif  // BCX_DS_DS_HPP
