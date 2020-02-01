@@ -9,9 +9,14 @@ namespace bcx::db {
 
   static ds::Strings block_bytes;
   static size_t block_count;
+  DEFINE_STATIC(block_hash);
   static size_t tx_count;
+  DEFINE_STATIC(tx_hash);
   static size_t account_count;
+  DEFINE_STATIC(account_id);
   static size_t peer_count;
+  DEFINE_STATIC(peer_address);
+  DEFINE_STATIC(peer_pub);
   static std::ofstream appender;
 
   void truncate(size_t n) {
@@ -64,17 +69,26 @@ namespace bcx::db {
       appender.flush();
     }
     ++block_count;
-    for (auto &tx_wrap : block.block_v1().payload().transactions()) {
+    auto &block_payload = block.block_v1().payload();
+    block_hash.push_back(format::sha256(block_payload.SerializeAsString()));
+    for (auto &tx_wrap : block_payload.transactions()) {
       ++tx_count;
-      for (auto &cmd : tx_wrap.payload().reduced_payload().commands()) {
+      auto &tx_payload = tx_wrap.payload().reduced_payload();
+      tx_hash.push_back(format::sha256(tx_payload.SerializeAsString()));
+      for (auto &cmd : tx_payload.commands()) {
         using iroha::protocol::Command;
         switch (cmd.command_case()) {
           case Command::kCreateAccount: {
+            auto &account = cmd.create_account();
+            account_id.push_back(account.account_name() + "@" + account.domain_id());
             ++account_count;
             break;
           }
           case Command::kAddPeer: {
             ++peer_count;
+            auto &peer = cmd.add_peer().peer();
+            peer_address.push_back(peer.address());
+            peer_pub.push_back(*format::unhex<EDKey>(peer.peer_key()));
             break;
           }
           default:

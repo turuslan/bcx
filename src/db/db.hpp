@@ -4,6 +4,12 @@
 #include "ds/ds.hpp"
 
 namespace bcx::db {
+  extern std::vector<Sha256> block_hash;
+  extern ds::Indirect<false, std::vector<Sha256>>::Hashed tx_hash;
+  extern ds::Indirect<true, ds::Strings>::Hashed account_id;
+  extern ds::Strings peer_address;
+  extern ds::Indirect<false, std::vector<EDKey>>::Hashed peer_pub;
+
   void load();
   void addBlock(const iroha::protocol::Block &block);
 
