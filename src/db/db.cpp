@@ -10,6 +10,7 @@ namespace bcx::db {
   static ds::Strings block_bytes;
   static size_t block_count;
   DEFINE_STATIC(block_hash);
+  DEFINE_STATIC(block_tx_count);
   static size_t tx_count;
   DEFINE_STATIC(tx_hash);
   DEFINE_STATIC(tx_creator);
@@ -80,6 +81,7 @@ namespace bcx::db {
     ++block_count;
     auto &block_payload = block.block_v1().payload();
     block_hash.push_back(format::sha256(block_payload.SerializeAsString()));
+    block_tx_count.push_back(block_payload.transactions_size());
     for (auto &tx_wrap : block_payload.transactions()) {
       ++tx_count;
       auto &tx_payload = tx_wrap.payload().reduced_payload();

@@ -23,6 +23,7 @@ namespace bcx::ds {
     size_t size_bytes() const;
     size_t size(size_t i) const;
     size_t offset(size_t i) const;
+    size_t index(size_t offset) const;
     void push_back(size_t n);
     void truncate(size_t n);
 

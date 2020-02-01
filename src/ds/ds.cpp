@@ -18,6 +18,10 @@ namespace bcx::ds {
     return offset_[i];
   }
 
+  size_t Len::index(size_t offset) const {
+    return std::upper_bound(offset_.begin(), offset_.end(), offset) - offset_.begin() - 1;
+  }
+
   void Len::push_back(size_t n) {
     offset_.push_back(size_bytes() + n);
   }
