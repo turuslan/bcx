@@ -19,6 +19,7 @@ namespace bcx::db {
   DEFINE_STATIC(peer_pub);
   static size_t role_count;
   DEFINE_STATIC(role_name);
+  DEFINE_STATIC(role_perms);
   static size_t domain_count;
   DEFINE_STATIC(domain_id);
   DEFINE_STATIC(domain_role);
@@ -100,6 +101,11 @@ namespace bcx::db {
             ++role_count;
             auto role = cmd.create_role();
             role_name.push_back(role.role_name());
+            RolePerms perms;
+            for (auto &perm : role.permissions()) {
+              perms.set(perm);
+            }
+            role_perms.push_back(perms);
             break;
           }
           case Command::kCreateDomain: {

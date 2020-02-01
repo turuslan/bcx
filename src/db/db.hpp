@@ -10,6 +10,7 @@ namespace bcx::db {
   extern ds::Strings peer_address;
   extern ds::Indirect<false, std::vector<EDKey>>::Hashed peer_pub;
   extern ds::Indirect<true, ds::Strings>::Hashed role_name;
+  extern std::vector<RolePerms> role_perms;
   extern ds::Indirect<true, ds::Strings>::Hashed domain_id;
   extern std::vector<size_t> domain_role;
 

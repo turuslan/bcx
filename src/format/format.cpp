@@ -10,6 +10,8 @@
 #include "format/format.hpp"
 #include "gen/pb/block.pb.h"
 
+static_assert(bcx::kRolePermsBits == iroha::protocol::RolePermission_ARRAYSIZE);
+
 namespace bcx {
   namespace format {
     bool unhex(const std::string &str, Byte *out) {
@@ -70,6 +72,20 @@ namespace bcx {
         }
         len.push_back(stream.CurrentPosition() - len.size_bytes());
       }
+    }
+
+    std::string rolePermName(size_t i) {
+      return iroha::protocol::RolePermission_Name(i);
+    }
+
+    std::vector<std::string> rolePermNames(const RolePerms &perms) {
+      std::vector<std::string> names;
+      for (auto i = 0; i < perms.size(); ++i) {
+        if (perms.test(i)) {
+          names.push_back(rolePermName(i));
+        }
+      }
+      return names;
     }
   }  // namespace format
 

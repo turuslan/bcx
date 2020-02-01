@@ -2,6 +2,7 @@
 #define BCX_TYPES_HPP
 
 #include <array>
+#include <bitset>
 
 #define DEFINE_STATIC(x) decltype(x) x
 
@@ -13,6 +14,9 @@ namespace bcx {
   using Byte = uint8_t;
   using EDKey = std::array<Byte, 32>;
   using Sha256 = std::array<Byte, 32>;
+
+  constexpr size_t kRolePermsBits = 48;
+  using RolePerms = std::bitset<kRolePermsBits>;
 
   inline auto b2c(Byte *ptr) {
     return reinterpret_cast<char *>(ptr);
