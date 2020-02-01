@@ -56,7 +56,6 @@ namespace bcx {
       len = LenIndex{};
       google::protobuf::io::CodedInputStream stream{
           bytes.data(), static_cast<int>(bytes.size())};
-      auto offset = 0;
       while (true) {
         if (!stream.ReadTag()) {
           break;
@@ -68,7 +67,7 @@ namespace bcx {
         if (!stream.Skip(skip)) {
           break;
         }
-        len.offset.push_back(stream.CurrentPosition());
+        len.push_back(stream.CurrentPosition() - len.size_bytes());
       }
     }
   }  // namespace format

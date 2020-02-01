@@ -6,30 +6,34 @@
 
 namespace bcx {
   LenIndex::LenIndex() {
-    offset.push_back(0);
+    offset_.push_back(0);
   }
 
   size_t LenIndex::count() const {
-    return offset.size() - 1;
+    return offset_.size() - 1;
   }
 
   size_t LenIndex::size_bytes() const {
-    return offset.back();
+    return offset_.back();
   }
 
   size_t LenIndex::size(size_t i) const {
-    return offset[i + 1] - offset[i];
+    return offset_[i + 1] - offset_[i];
+  }
+
+  size_t LenIndex::offset(size_t i) const {
+    return offset_[i];
   }
 
   void LenIndex::push_back(size_t n) {
-    offset.push_back(size_bytes() + n);
+    offset_.push_back(size_bytes() + n);
   }
 
   void LenIndex::truncate(size_t n) {
     if (n > count()) {
       fatal("LenIndex::truncate invalid argument");
     }
-    offset.resize(n + 1);
+    offset_.resize(n + 1);
   }
 
   void LenBytes::push_back(const std::string &str) {
@@ -43,7 +47,7 @@ namespace bcx {
   }
 
   std::string LenBytes::str(size_t i) {
-    return {b2c(bytes.data() + len.offset[i]), len.size(i)};
+    return {b2c(bytes.data() + len.offset(i)), len.size(i)};
   }
 }  // namespace bcx
 
@@ -75,9 +79,7 @@ namespace bcx::db {
     }
     iroha::protocol::Block block;
     for (auto i = 0u; i < block_bytes.len.count(); ++i) {
-      if (!block.ParseFromArray(
-              block_bytes.bytes.data() + block_bytes.len.offset[i],
-              block_bytes.len.size(i))) {
+      if (!block.ParseFromString(block_bytes.str(i))) {
         logger::warn("Cached block {} corrupted, truncating {} blocks",
                      i + 1,
                      block_bytes.len.count() - i);

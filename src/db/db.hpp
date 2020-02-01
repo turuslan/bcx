@@ -6,15 +6,18 @@
 #include "types.hpp"
 
 namespace bcx {
-  struct LenIndex {
+  class LenIndex {
+   public:
     LenIndex();
     size_t count() const;
     size_t size_bytes() const;
     size_t size(size_t i) const;
+    size_t offset(size_t i) const;
     void push_back(size_t n);
     void truncate(size_t n);
 
-    std::vector<size_t> offset;
+   private:
+    std::vector<size_t> offset_;
   };
 
   struct LenBytes {
