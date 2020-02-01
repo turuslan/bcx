@@ -15,6 +15,7 @@ namespace bcx::db {
   DEFINE_STATIC(tx_creator);
   static size_t account_count;
   DEFINE_STATIC(account_id);
+  DEFINE_STATIC(account_quorum);
   DEFINE_STATIC(account_roles);
   static size_t peer_count;
   DEFINE_STATIC(peer_address);
@@ -91,12 +92,18 @@ namespace bcx::db {
             auto account_i = account_count++;
             auto domain = account.domain_id();
             account_id.push_back(account.account_name() + "@" + domain);
+            account_quorum.push_back(1);
             account_roles.add(account_i, domain_role[*domain_id.find(domain)]);
             break;
           }
           case Command::kAppendRole: {
             auto &append = cmd.append_role();
             account_roles.add(*account_id.find(append.account_id()), *role_name.find(append.role_name()));
+            break;
+          }
+          case Command::kSetAccountQuorum: {
+            auto &set = cmd.set_account_quorum();
+            account_quorum[*account_id.find(set.account_id())] = set.quorum();
             break;
           }
           case Command::kAddPeer: {
