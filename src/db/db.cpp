@@ -13,6 +13,10 @@ namespace bcx {
     return len.size_bytes();
   }
 
+  ds::String LenBytes::operator[](size_t i) const {
+    return {bytes.data() + len.offset(i), len.size(i)};
+  }
+
   void LenBytes::push_back(const std::string &str) {
     len.push_back(str.size());
     bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
@@ -21,10 +25,6 @@ namespace bcx {
   void LenBytes::truncate(size_t n) {
     len.truncate(n);
     bytes.resize(size_bytes());
-  }
-
-  std::string LenBytes::str(size_t i) {
-    return {b2c(bytes.data() + len.offset(i)), len.size(i)};
   }
 }  // namespace bcx
 
@@ -56,7 +56,7 @@ namespace bcx::db {
     }
     iroha::protocol::Block block;
     for (auto i = 0u; i < block_bytes.size(); ++i) {
-      if (!block.ParseFromString(block_bytes.str(i))) {
+      if (!block.ParseFromString(block_bytes[i].str())) {
         logger::warn("Cached block {} corrupted, truncating {} blocks",
                      i + 1,
                      block_bytes.size() - i);

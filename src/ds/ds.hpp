@@ -18,6 +18,16 @@ namespace bcx::ds {
    private:
     std::vector<size_t> offset_{0};
   };
+
+  class String {
+   public:
+    String(const Byte *ptr, size_t size);
+    std::string str() const;
+
+   private:
+    const Byte *ptr_;
+    size_t size_;
+  };
 }  // namespace bcx::ds
 
 #endif  // BCX_DS_DS_HPP

@@ -7,9 +7,9 @@ namespace bcx {
   struct LenBytes {
     size_t size() const;
     size_t size_bytes() const;
+    ds::String operator[](size_t i) const;
     void push_back(const std::string &str);
     void truncate(size_t n);
-    std::string str(size_t i);
 
     std::vector<Byte> bytes;
     ds::Len len;

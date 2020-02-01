@@ -28,4 +28,11 @@ namespace bcx::ds {
     }
     offset_.resize(n + 1);
   }
+
+  String::String(const Byte *ptr, size_t size) : ptr_{ptr}, size_{size} {
+  }
+
+  std::string String::str() const {
+    return {b2c(ptr_), size_};
+  }
 }  // namespace bcx
