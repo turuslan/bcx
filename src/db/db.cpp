@@ -17,6 +17,11 @@ namespace bcx::db {
   static size_t peer_count;
   DEFINE_STATIC(peer_address);
   DEFINE_STATIC(peer_pub);
+  static size_t role_count;
+  DEFINE_STATIC(role_name);
+  static size_t domain_count;
+  DEFINE_STATIC(domain_id);
+  DEFINE_STATIC(domain_role);
   static std::ofstream appender;
 
   void truncate(size_t n) {
@@ -91,6 +96,19 @@ namespace bcx::db {
             peer_pub.push_back(*format::unhex<EDKey>(peer.peer_key()));
             break;
           }
+          case Command::kCreateRole: {
+            ++role_count;
+            auto role = cmd.create_role();
+            role_name.push_back(role.role_name());
+            break;
+          }
+          case Command::kCreateDomain: {
+            ++domain_count;
+            auto &domain = cmd.create_domain();
+            domain_id.push_back(domain.domain_id());
+            domain_role.push_back(*role_name.find(domain.default_role()));
+            break;
+          }
           default:
             break;
         }
@@ -112,5 +130,13 @@ namespace bcx::db {
 
   size_t peerCount() {
     return peer_count;
+  }
+
+  size_t roleCount() {
+    return role_count;
+  }
+
+  size_t domainCount() {
+    return domain_count;
   }
 }  // namespace bcx::db
