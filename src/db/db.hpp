@@ -10,6 +10,7 @@ namespace bcx::db {
   extern ds::Indirect<false, std::vector<Sha256>>::Hashed tx_hash;
   extern std::vector<uint64_t> tx_time;
   extern std::vector<size_t> tx_creator;
+  extern ds::Linked<size_t>::Vector tx_pubs;
   extern ds::Indirect<true, ds::Strings>::Hashed account_id;
   extern std::vector<size_t> account_quorum;
   extern ds::Linked<size_t>::Vector account_roles;
@@ -19,6 +20,7 @@ namespace bcx::db {
   extern std::vector<RolePerms> role_perms;
   extern ds::Indirect<true, ds::Strings>::Hashed domain_id;
   extern std::vector<size_t> domain_role;
+  extern ds::Indirect<false, std::vector<EDKey>>::Hashed all_pub;
 
   void load();
   void addBlock(const iroha::protocol::Block &block);

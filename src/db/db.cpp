@@ -16,6 +16,7 @@ namespace bcx::db {
   DEFINE_STATIC(tx_hash);
   DEFINE_STATIC(tx_time);
   DEFINE_STATIC(tx_creator);
+  DEFINE_STATIC(tx_pubs);
   static size_t account_count;
   DEFINE_STATIC(account_id);
   DEFINE_STATIC(account_quorum);
@@ -29,6 +30,7 @@ namespace bcx::db {
   static size_t domain_count;
   DEFINE_STATIC(domain_id);
   DEFINE_STATIC(domain_role);
+  DEFINE_STATIC(all_pub);
   static std::ofstream appender;
 
   void truncate(size_t n) {
@@ -86,10 +88,19 @@ namespace bcx::db {
     block_time.push_back(block_payload.created_time());
     block_tx_count.push_back(block_payload.transactions_size());
     for (auto &tx_wrap : block_payload.transactions()) {
-      ++tx_count;
+      auto tx_i = tx_count++;
       auto &tx_payload = tx_wrap.payload().reduced_payload();
       tx_hash.push_back(format::sha256(tx_payload.SerializeAsString()));
       tx_time.push_back(tx_payload.created_time());
+      for (auto &sig : tx_wrap.signatures()) {
+        auto pub = *format::unhex<EDKey>(sig.public_key());
+        auto pub_i = all_pub.find(pub);
+        if (!pub_i) {
+          pub_i = all_pub.size();
+          all_pub.push_back(pub);
+        }
+        tx_pubs.add(tx_i, *pub_i);
+      }
       for (auto &cmd : tx_payload.commands()) {
         using iroha::protocol::Command;
         switch (cmd.command_case()) {
