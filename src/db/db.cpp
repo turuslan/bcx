@@ -36,6 +36,14 @@ namespace bcx {
     offset_.resize(n + 1);
   }
 
+  size_t LenBytes::size() const {
+    return len.size();
+  }
+
+  size_t LenBytes::size_bytes() const {
+    return len.size_bytes();
+  }
+
   void LenBytes::push_back(const std::string &str) {
     len.push_back(str.size());
     bytes.insert(bytes.end(), c2b(str.data()), c2b(str.data()) + str.size());
@@ -43,7 +51,7 @@ namespace bcx {
 
   void LenBytes::truncate(size_t n) {
     len.truncate(n);
-    bytes.resize(len.size_bytes());
+    bytes.resize(size_bytes());
   }
 
   std::string LenBytes::str(size_t i) {
@@ -72,17 +80,17 @@ namespace bcx::db {
 
     block_bytes.bytes = format::readBytes(kBlockCache);
     format::splitPb(block_bytes.len, block_bytes.bytes);
-    auto extra = block_bytes.bytes.size() - block_bytes.len.size_bytes();
+    auto extra = block_bytes.bytes.size() - block_bytes.size_bytes();
     if (extra) {
       logger::warn("Block cache corrupted, truncating {} bytes", extra);
-      truncate(block_bytes.len.size());
+      truncate(block_bytes.size());
     }
     iroha::protocol::Block block;
-    for (auto i = 0u; i < block_bytes.len.size(); ++i) {
+    for (auto i = 0u; i < block_bytes.size(); ++i) {
       if (!block.ParseFromString(block_bytes.str(i))) {
         logger::warn("Cached block {} corrupted, truncating {} blocks",
                      i + 1,
-                     block_bytes.len.size() - i);
+                     block_bytes.size() - i);
         truncate(i);
         break;
       }
@@ -103,7 +111,7 @@ namespace bcx::db {
     if (height != block_count + 1) {
       fatal("Expected block {} got {}", block_count + 1, height);
     }
-    if (height > block_bytes.len.size()) {
+    if (height > block_bytes.size()) {
       auto bytes = block.SerializeAsString();
       block_bytes.push_back(bytes);
       appender.write(bytes.data(), bytes.size());
