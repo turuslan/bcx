@@ -1,25 +1,9 @@
 #ifndef BCX_DB_DB_HPP
 #define BCX_DB_DB_HPP
 
-#include <vector>
-
-#include "types.hpp"
+#include "ds/ds.hpp"
 
 namespace bcx {
-  class LenIndex {
-   public:
-    LenIndex();
-    size_t size() const;
-    size_t size_bytes() const;
-    size_t size(size_t i) const;
-    size_t offset(size_t i) const;
-    void push_back(size_t n);
-    void truncate(size_t n);
-
-   private:
-    std::vector<size_t> offset_;
-  };
-
   struct LenBytes {
     size_t size() const;
     size_t size_bytes() const;
@@ -28,7 +12,7 @@ namespace bcx {
     std::string str(size_t i);
 
     std::vector<Byte> bytes;
-    LenIndex len;
+    ds::Len len;
   };
 }  // namespace bcx
 

@@ -5,37 +5,6 @@
 #include "gen/pb/block.pb.h"
 
 namespace bcx {
-  LenIndex::LenIndex() {
-    offset_.push_back(0);
-  }
-
-  size_t LenIndex::size() const {
-    return offset_.size() - 1;
-  }
-
-  size_t LenIndex::size_bytes() const {
-    return offset_.back();
-  }
-
-  size_t LenIndex::size(size_t i) const {
-    return offset_[i + 1] - offset_[i];
-  }
-
-  size_t LenIndex::offset(size_t i) const {
-    return offset_[i];
-  }
-
-  void LenIndex::push_back(size_t n) {
-    offset_.push_back(size_bytes() + n);
-  }
-
-  void LenIndex::truncate(size_t n) {
-    if (n > size()) {
-      fatal("LenIndex::truncate invalid argument");
-    }
-    offset_.resize(n + 1);
-  }
-
   size_t LenBytes::size() const {
     return len.size();
   }

@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "db/db.hpp"
+#include "ds/ds.hpp"
 #include "format/format.hpp"
 #include "gen/pb/block.pb.h"
 
@@ -52,8 +53,8 @@ namespace bcx {
       return read<std::vector<Byte>>(path);
     }
 
-    void splitPb(LenIndex &len, const std::vector<Byte> &bytes) {
-      len = LenIndex{};
+    void splitPb(ds::Len &len, const std::vector<Byte> &bytes) {
+      len = ds::Len{};
       google::protobuf::io::CodedInputStream stream{
           bytes.data(), static_cast<int>(bytes.size())};
       while (true) {
