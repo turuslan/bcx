@@ -10,9 +10,11 @@ namespace bcx::db {
   static ds::Strings block_bytes;
   static size_t block_count;
   DEFINE_STATIC(block_hash);
+  DEFINE_STATIC(block_time);
   DEFINE_STATIC(block_tx_count);
   static size_t tx_count;
   DEFINE_STATIC(tx_hash);
+  DEFINE_STATIC(tx_time);
   DEFINE_STATIC(tx_creator);
   static size_t account_count;
   DEFINE_STATIC(account_id);
@@ -81,11 +83,13 @@ namespace bcx::db {
     ++block_count;
     auto &block_payload = block.block_v1().payload();
     block_hash.push_back(format::sha256(block_payload.SerializeAsString()));
+    block_time.push_back(block_payload.created_time());
     block_tx_count.push_back(block_payload.transactions_size());
     for (auto &tx_wrap : block_payload.transactions()) {
       ++tx_count;
       auto &tx_payload = tx_wrap.payload().reduced_payload();
       tx_hash.push_back(format::sha256(tx_payload.SerializeAsString()));
+      tx_time.push_back(tx_payload.created_time());
       for (auto &cmd : tx_payload.commands()) {
         using iroha::protocol::Command;
         switch (cmd.command_case()) {

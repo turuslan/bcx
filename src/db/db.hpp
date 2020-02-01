@@ -5,8 +5,10 @@
 
 namespace bcx::db {
   extern std::vector<Sha256> block_hash;
+  extern std::vector<uint64_t> block_time;
   extern ds::Len block_tx_count;
   extern ds::Indirect<false, std::vector<Sha256>>::Hashed tx_hash;
+  extern std::vector<uint64_t> tx_time;
   extern std::vector<size_t> tx_creator;
   extern ds::Indirect<true, ds::Strings>::Hashed account_id;
   extern std::vector<size_t> account_quorum;

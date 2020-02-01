@@ -41,6 +41,10 @@ namespace bcx {
     std::string rolePermName(size_t i);
 
     std::vector<std::string> rolePermNames(const RolePerms &perms);
+
+    std::string timeToIso(uint64_t time);
+
+    std::optional<uint64_t> isoToTime(const std::string &str);
   }  // namespace format
 
   namespace logger = spdlog;

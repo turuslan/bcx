@@ -1,5 +1,6 @@
 #include <ed25519/ed25519/sha256.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/util/time_util.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
@@ -86,6 +87,20 @@ namespace bcx {
         }
       }
       return names;
+    }
+
+    using google::protobuf::util::TimeUtil;
+
+    std::string timeToIso(uint64_t time) {
+      return TimeUtil::ToString(TimeUtil::MillisecondsToTimestamp(time));
+    }
+
+    std::optional<uint64_t> isoToTime(const std::string &str) {
+      google::protobuf::Timestamp ts;
+      if (TimeUtil::FromString(str, &ts)) {
+        return TimeUtil::TimestampToMilliseconds(ts);
+      }
+      return std::nullopt;
     }
   }  // namespace format
 
