@@ -15,6 +15,7 @@ namespace bcx::db {
   DEFINE_STATIC(tx_creator);
   static size_t account_count;
   DEFINE_STATIC(account_id);
+  DEFINE_STATIC(account_roles);
   static size_t peer_count;
   DEFINE_STATIC(peer_address);
   DEFINE_STATIC(peer_pub);
@@ -87,8 +88,15 @@ namespace bcx::db {
         switch (cmd.command_case()) {
           case Command::kCreateAccount: {
             auto &account = cmd.create_account();
-            account_id.push_back(account.account_name() + "@" + account.domain_id());
-            ++account_count;
+            auto account_i = account_count++;
+            auto domain = account.domain_id();
+            account_id.push_back(account.account_name() + "@" + domain);
+            account_roles.add(account_i, domain_role[*domain_id.find(domain)]);
+            break;
+          }
+          case Command::kAppendRole: {
+            auto &append = cmd.append_role();
+            account_roles.add(*account_id.find(append.account_id()), *role_name.find(append.role_name()));
             break;
           }
           case Command::kAddPeer: {

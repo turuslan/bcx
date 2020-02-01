@@ -8,6 +8,7 @@ namespace bcx::db {
   extern ds::Indirect<false, std::vector<Sha256>>::Hashed tx_hash;
   extern std::vector<size_t> tx_creator;
   extern ds::Indirect<true, ds::Strings>::Hashed account_id;
+  extern ds::Linked<size_t>::Vector account_roles;
   extern ds::Strings peer_address;
   extern ds::Indirect<false, std::vector<EDKey>>::Hashed peer_pub;
   extern ds::Indirect<true, ds::Strings>::Hashed role_name;

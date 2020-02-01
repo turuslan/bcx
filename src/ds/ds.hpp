@@ -124,6 +124,69 @@ namespace bcx::ds {
     const Vector &vector;
     std::optional<std::conditional_t<copy, T, std::reference_wrapper<const T>>> key;
   };
+
+  template <typename T>
+  struct Linked {
+    static constexpr size_t null = SIZE_T_MAX;
+
+    auto add(const T &value, size_t next = null) {
+      size_t i = nodes.size();
+      nodes.push_back({value, next});
+      return i;
+    }
+
+    struct Iterator {
+      auto &operator++() {
+        head = linked.nodes[head].second;
+        return *this;
+      }
+
+      auto operator!=(const Iterator &other) const {
+        return head != other.head;
+      }
+
+      decltype(auto) operator*() const{
+        return linked.nodes[head].first;
+      }
+
+      Linked &linked;
+      size_t head;
+    };
+
+    struct Range {
+      Iterator begin() const {
+        return iterator;
+      }
+
+      Iterator end() const {
+        return {iterator.linked, null};
+      }
+
+      const Iterator iterator;
+    };
+
+    auto range(size_t head) {
+      return Range{{*this, head}};
+    }
+
+    struct Vector {
+      void add(size_t index, const T &value) {
+        if (index >= heads.size()) {
+          heads.resize(index + 1, null);
+        }
+        heads[index] = linked.add(value, heads[index]);
+      }
+
+      auto range(size_t index) {
+        return linked.range(index < heads.size() ? heads[index] : null);
+      }
+
+      std::vector<size_t> heads;
+      Linked<T> linked;
+    };
+
+    std::vector<std::pair<T, size_t>> nodes;
+  };
 }  // namespace bcx::ds
 
 #endif  // BCX_DS_DS_HPP
