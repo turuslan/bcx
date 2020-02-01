@@ -9,7 +9,7 @@ namespace bcx {
   class LenIndex {
    public:
     LenIndex();
-    size_t count() const;
+    size_t size() const;
     size_t size_bytes() const;
     size_t size(size_t i) const;
     size_t offset(size_t i) const;
