@@ -1,5 +1,6 @@
 #include <ed25519/ed25519/sha256.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/util/json_util.h>
 #include <google/protobuf/util/time_util.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -141,6 +142,45 @@ namespace bcx {
         return TimeUtil::TimestampToMilliseconds(ts);
       }
       return std::nullopt;
+    }
+
+    void getTxCmd(std::vector<std::pair<size_t, size_t>> &result, std::string_view block) {
+      std::string_view block_v1, block_payload, tx, tx_payload, tx_reduced_payload, cmd;
+      Pb{block}.next(iroha::protocol::Block::kBlockV1FieldNumber, block_v1);
+      Pb{block_v1}.next(iroha::protocol::Block_v1::kPayloadFieldNumber, block_payload);
+      Pb pb_block{block_payload};
+      while (pb_block.next(iroha::protocol::Block_v1_Payload::kTransactionsFieldNumber, tx)) {
+        Pb{tx}.next(iroha::protocol::Transaction::kPayloadFieldNumber, tx_payload);
+        Pb{tx}.next(iroha::protocol::Transaction_Payload::kReducedPayloadFieldNumber, tx_reduced_payload);
+        Pb pb_tx{tx_reduced_payload};
+        std::string_view tx_cmd;
+        while (pb_tx.next(iroha::protocol::Transaction_Payload_ReducedPayload::kCommandsFieldNumber, cmd)) {
+          if (!tx_cmd.data()) {
+            tx_cmd = cmd;
+          } else {
+            tx_cmd = {tx_cmd.data(), tx_cmd.size() + cmd.size()};
+          }
+        }
+        result.push_back({tx_cmd.data() - block.data(), tx_cmd.size()});
+      }
+    }
+
+    std::string txCmdJson(std::string_view bytes) {
+      std::string result;
+      result.push_back('[');
+
+      Pb pb{bytes};
+      std::string_view cmd_bytes;
+      iroha::protocol::Command cmd;
+      while (pb.next(iroha::protocol::Transaction_Payload_ReducedPayload::kCommandsFieldNumber, cmd_bytes)) {
+        cmd.ParseFromArray(cmd_bytes.data(), cmd_bytes.size());
+        google::protobuf::util::MessageToJsonString(cmd, &result);
+        result.push_back(',');
+      }
+
+      result.pop_back();
+      result.push_back(']');
+      return result;
     }
   }  // namespace format
 

@@ -51,6 +51,10 @@ namespace bcx {
     std::string timeToIso(uint64_t time);
 
     std::optional<uint64_t> isoToTime(const std::string &str);
+
+    void getTxCmd(std::vector<std::pair<size_t, size_t>> &result, std::string_view block);
+
+    std::string txCmdJson(std::string_view bytes);
   }  // namespace format
 
   namespace logger = spdlog;

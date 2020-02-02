@@ -24,6 +24,7 @@ namespace bcx::db {
   DEFINE_STATIC(tx_time);
   DEFINE_STATIC(tx_creator);
   DEFINE_STATIC(tx_pubs);
+  DEFINE_STATIC(tx_cmds);
   static size_t account_count;
   DEFINE_STATIC(account_id);
   DEFINE_STATIC(account_quorum);
@@ -99,11 +100,12 @@ namespace bcx::db {
       appender.write(bytes.data(), bytes.size());
       appender.flush();
     }
-    ++block_count;
+    auto block_i = block_count++;
     auto &block_payload = block.block_v1().payload();
     block_hash.push_back(format::sha256(block_payload.SerializeAsString()));
     block_time.push_back(block_payload.created_time());
     block_tx_count.push_back(block_payload.transactions_size());
+    format::getTxCmd(tx_cmds, block_bytes[block_i]);
     for (auto &tx_wrap : block_payload.transactions()) {
       auto tx_i = tx_count++;
       auto &tx_payload = tx_wrap.payload().reduced_payload();

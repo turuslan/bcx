@@ -18,6 +18,7 @@ namespace bcx::db {
   extern std::vector<uint64_t> tx_time;
   extern std::vector<size_t> tx_creator;
   extern ds::Linked<size_t>::Vector tx_pubs;
+  extern std::vector<std::pair<size_t, size_t>> tx_cmds;
   extern ds::Indirect<true, ds::Strings>::Hashed account_id;
   extern std::vector<size_t> account_quorum;
   extern ds::Linked<size_t>::Vector account_roles;
