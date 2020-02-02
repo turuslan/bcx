@@ -1,4 +1,5 @@
 belle
+boost-bimap
 cppgraphqlgen
 grpc
 iroha-ed25519

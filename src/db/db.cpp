@@ -21,6 +21,7 @@ namespace bcx::db {
   DEFINE_STATIC(account_id);
   DEFINE_STATIC(account_quorum);
   DEFINE_STATIC(account_roles);
+  DEFINE_STATIC(account_grant);
   static size_t peer_count;
   DEFINE_STATIC(peer_address);
   DEFINE_STATIC(peer_pub);
@@ -101,6 +102,7 @@ namespace bcx::db {
         }
         tx_pubs.add(tx_i, *pub_i);
       }
+      auto creator = *account_id.find(tx_payload.creator_account_id());
       for (auto &cmd : tx_payload.commands()) {
         using iroha::protocol::Command;
         switch (cmd.command_case()) {
@@ -121,6 +123,17 @@ namespace bcx::db {
           case Command::kSetAccountQuorum: {
             auto &set = cmd.set_account_quorum();
             account_quorum[*account_id.find(set.account_id())] = set.quorum();
+            break;
+          }
+          case Command::kGrantPermission: {
+            auto &grant = cmd.grant_permission();
+            auto to = *account_id.find(grant.account_id());
+            auto by = creator;
+            auto p = account_grant.find(GrantBimap::key_type{by, to});
+            if (p == account_grant.end()) {
+              p = account_grant.insert({by, to}).first;
+            }
+            p->info.set(grant.permission());
             break;
           }
           case Command::kAddPeer: {
@@ -152,7 +165,7 @@ namespace bcx::db {
             break;
         }
       }
-      tx_creator.push_back(*account_id.find(tx_payload.creator_account_id()));
+      tx_creator.push_back(creator);
     }
   }
 

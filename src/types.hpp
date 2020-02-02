@@ -17,6 +17,12 @@ namespace bcx {
 
   constexpr size_t kRolePermsBits = 48;
   using RolePerms = std::bitset<kRolePermsBits>;
+  constexpr size_t kGrantPermsBits = 5;
+  using GrantPerms = std::bitset<kGrantPermsBits>;
+
+  struct Grant {
+    size_t by, to, perm;
+  };
 
   inline auto b2c(Byte *ptr) {
     return reinterpret_cast<char *>(ptr);

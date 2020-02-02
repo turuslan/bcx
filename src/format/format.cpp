@@ -12,6 +12,7 @@
 #include "gen/pb/block.pb.h"
 
 static_assert(bcx::kRolePermsBits == iroha::protocol::RolePermission_ARRAYSIZE);
+static_assert(bcx::kGrantPermsBits == iroha::protocol::GrantablePermission_ARRAYSIZE);
 
 namespace bcx {
   namespace format {
@@ -87,6 +88,10 @@ namespace bcx {
         }
       }
       return names;
+    }
+
+    std::string grantPermName(size_t i) {
+      return iroha::protocol::GrantablePermission_Name(i);
     }
 
     using google::protobuf::util::TimeUtil;

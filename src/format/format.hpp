@@ -42,6 +42,8 @@ namespace bcx {
 
     std::vector<std::string> rolePermNames(const RolePerms &perms);
 
+    std::string grantPermName(size_t i);
+
     std::string timeToIso(uint64_t time);
 
     std::optional<uint64_t> isoToTime(const std::string &str);
