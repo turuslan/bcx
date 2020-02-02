@@ -72,6 +72,10 @@ namespace bcx::db {
                  load_duration.count());
   }
 
+  auto txCreator(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
+    return *account_id.find(payload.creator_account_id());
+  }
+
   void addBlock(const iroha::protocol::Block &block) {
     auto height = format::blockHeight(block);
     if (height != block_count + 1) {
@@ -102,7 +106,6 @@ namespace bcx::db {
         }
         tx_pubs.add(tx_i, *pub_i);
       }
-      auto creator = *account_id.find(tx_payload.creator_account_id());
       for (auto &cmd : tx_payload.commands()) {
         using iroha::protocol::Command;
         switch (cmd.command_case()) {
@@ -128,7 +131,7 @@ namespace bcx::db {
           case Command::kGrantPermission: {
             auto &grant = cmd.grant_permission();
             auto to = *account_id.find(grant.account_id());
-            auto by = creator;
+            auto by = txCreator(tx_payload);
             auto p = account_grant.find(GrantBimap::key_type{by, to});
             if (p == account_grant.end()) {
               p = account_grant.insert({by, to}).first;
@@ -165,7 +168,7 @@ namespace bcx::db {
             break;
         }
       }
-      tx_creator.push_back(creator);
+      tx_creator.push_back(txCreator(tx_payload));
     }
   }
 
