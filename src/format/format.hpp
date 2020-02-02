@@ -40,7 +40,7 @@ namespace bcx {
 
     std::string readText(const std::string &path);
 
-    void splitPb(ds::Len &len, const std::vector<Byte> &bytes);
+    void splitPb(ds::Len &len, std::string_view bytes, int field);
 
     std::string rolePermName(size_t i);
 

@@ -39,6 +39,10 @@ namespace bcx {
   inline auto c2b(const char *ptr) {
     return reinterpret_cast<const Byte *>(ptr);
   }
+
+  inline auto bv2sv(const std::vector<Byte> &bytes) {
+    return std::string_view{b2c(bytes.data()), bytes.size()};
+  }
 }  // namespace bcx
 
 #endif  // BCX_TYPES_HPP

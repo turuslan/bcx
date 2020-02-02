@@ -9,6 +9,8 @@
 
 namespace bcx::db {
   using GrantBimap = boost::bimap<boost::bimaps::multiset_of<size_t>, boost::bimaps::multiset_of<size_t>, boost::bimaps::with_info<GrantPerms>>;
+
+  extern ds::Strings block_bytes;
   extern std::vector<Sha256> block_hash;
   extern std::vector<uint64_t> block_time;
   extern ds::Len block_tx_count;

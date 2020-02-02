@@ -65,22 +65,49 @@ namespace bcx {
       return read<std::string>(path);
     }
 
-    void splitPb(ds::Len &len, const std::vector<Byte> &bytes) {
+    struct Pb {
+      Pb(std::string_view bytes) : stream{c2b(bytes.data()), static_cast<int>(bytes.size())} {}
+
+      bool next(int field, int &size) {
+        auto tag = stream.ReadTag();
+        if (!tag || (tag >> 3) != field || !stream.ReadVarintSizeAsInt(&size)) {
+          return false;
+        }
+        if (tag & 2) {
+          if (!stream.Skip(size)) {
+            return false;
+          }
+        } else {
+          size = 0;
+        }
+        return true;
+      }
+
+      bool next(int field) {
+        int size;
+        return next(field, size);
+      }
+
+      bool next(int field, std::string_view &bytes) {
+        int size;
+        const void *data;
+        stream.GetDirectBufferPointer(&data, &size);
+        auto offset = stream.CurrentPosition();
+        if (!next(field, size)) {
+          return false;
+        }
+        bytes = {static_cast<const char *>(data) + stream.CurrentPosition() - offset - size, static_cast<size_t>(size)};
+        return true;
+      }
+
+      google::protobuf::io::CodedInputStream stream;
+    };
+
+    void splitPb(ds::Len &len, std::string_view bytes, int field) {
       len = ds::Len{};
-      google::protobuf::io::CodedInputStream stream{
-          bytes.data(), static_cast<int>(bytes.size())};
-      while (true) {
-        if (!stream.ReadTag()) {
-          break;
-        }
-        int skip;
-        if (!stream.ReadVarintSizeAsInt(&skip)) {
-          break;
-        }
-        if (!stream.Skip(skip)) {
-          break;
-        }
-        len.push_back(stream.CurrentPosition() - len.size_bytes());
+      Pb pb{bytes};
+      while (pb.next(field)) {
+        len.push_back(pb.stream.CurrentPosition() - len.size_bytes());
       }
     }
 

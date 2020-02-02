@@ -5,9 +5,16 @@
 #include "gen/pb/block.pb.h"
 
 namespace bcx::db {
+  static_assert(iroha::protocol::Block::kBlockV1FieldNumber == 1);
+  static_assert(iroha::protocol::Block_v1::kPayloadFieldNumber == 1);
+  static_assert(iroha::protocol::Block_v1_Payload::kTransactionsFieldNumber == 1);
+  static_assert(iroha::protocol::Transaction::kPayloadFieldNumber == 1);
+  static_assert(iroha::protocol::Transaction_Payload::kReducedPayloadFieldNumber == 1);
+  static_assert(iroha::protocol::Transaction_Payload_ReducedPayload::kCommandsFieldNumber == 1);
+
   constexpr auto kBlockCache = "block.cache";
 
-  static ds::Strings block_bytes;
+  DEFINE_STATIC(block_bytes);
   static size_t block_count;
   DEFINE_STATIC(block_hash);
   DEFINE_STATIC(block_time);
@@ -45,7 +52,7 @@ namespace bcx::db {
     auto load_start_time = std::chrono::system_clock::now();
 
     block_bytes.bytes = format::readBytes(kBlockCache);
-    format::splitPb(block_bytes.len, block_bytes.bytes);
+    format::splitPb(block_bytes.len, bv2sv(block_bytes.bytes), iroha::protocol::Block::kBlockV1);
     auto extra = block_bytes.bytes.size() - block_bytes.size_bytes();
     if (extra) {
       logger::warn("Block cache corrupted, truncating {} bytes", extra);
