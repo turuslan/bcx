@@ -26,6 +26,7 @@ namespace bcx::db {
   extern std::vector<RolePerms> role_perms;
   extern ds::Indirect<true, ds::Strings>::Hashed domain_id;
   extern std::vector<size_t> domain_role;
+  extern std::vector<size_t> domain_tx_count;
   extern ds::Indirect<false, std::vector<EDKey>>::Hashed all_pub;
 
   void load();

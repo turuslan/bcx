@@ -31,6 +31,7 @@ namespace bcx::db {
   static size_t domain_count;
   DEFINE_STATIC(domain_id);
   DEFINE_STATIC(domain_role);
+  DEFINE_STATIC(domain_tx_count);
   DEFINE_STATIC(all_pub);
   static std::ofstream appender;
 
@@ -74,6 +75,10 @@ namespace bcx::db {
 
   auto txCreator(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
     return *account_id.find(payload.creator_account_id());
+  }
+
+  auto txCreatorDomain(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
+    return *domain_id.find(format::domainOf(payload.creator_account_id()));
   }
 
   void addBlock(const iroha::protocol::Block &block) {
@@ -162,6 +167,7 @@ namespace bcx::db {
             auto &domain = cmd.create_domain();
             domain_id.push_back(domain.domain_id());
             domain_role.push_back(*role_name.find(domain.default_role()));
+            domain_tx_count.push_back(0);
             break;
           }
           default:
@@ -169,6 +175,7 @@ namespace bcx::db {
         }
       }
       tx_creator.push_back(txCreator(tx_payload));
+      ++domain_tx_count[txCreatorDomain(tx_payload)];
     }
   }
 

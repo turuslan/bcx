@@ -32,6 +32,8 @@ namespace bcx {
 
     Sha256 sha256(const std::string &bytes);
 
+    std::string domainOf(const std::string &account);
+
     size_t blockHeight(const iroha::protocol::Block &block);
 
     std::vector<Byte> readBytes(const std::string &path);

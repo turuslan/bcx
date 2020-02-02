@@ -37,6 +37,10 @@ namespace bcx {
       return res;
     }
 
+    std::string domainOf(const std::string &account) {
+      return account.substr(account.find_first_of('@') + 1);
+    }
+
     size_t blockHeight(const iroha::protocol::Block &block) {
       return block.block_v1().payload().height();
     }
