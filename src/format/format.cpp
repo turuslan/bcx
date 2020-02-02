@@ -48,13 +48,17 @@ namespace bcx {
       if (file.good()) {
         res.resize(file.tellg());
         file.seekg(0, std::ios::beg);
-        file.read(b2c(std::data(res)), std::size(res));
+        file.read(reinterpret_cast<char *>(std::data(res)), std::size(res));
       }
       return res;
     }
 
     std::vector<Byte> readBytes(const std::string &path) {
       return read<std::vector<Byte>>(path);
+    }
+
+    std::string readText(const std::string &path) {
+      return read<std::string>(path);
     }
 
     void splitPb(ds::Len &len, const std::vector<Byte> &bytes) {
@@ -82,7 +86,7 @@ namespace bcx {
 
     std::vector<std::string> rolePermNames(const RolePerms &perms) {
       std::vector<std::string> names;
-      for (auto i = 0; i < perms.size(); ++i) {
+      for (auto i = 0u; i < perms.size(); ++i) {
         if (perms.test(i)) {
           names.push_back(rolePermName(i));
         }
