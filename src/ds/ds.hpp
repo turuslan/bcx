@@ -1,6 +1,7 @@
 #ifndef BCX_DS_DS_HPP
 #define BCX_DS_DS_HPP
 
+#include <functional>
 #include <string_view>
 #include <unordered_set>
 #include <vector>
@@ -121,14 +122,14 @@ namespace bcx::ds {
       }
     };
 
-    static constexpr size_t key_index{SIZE_T_MAX};
+    static constexpr size_t key_index{std::numeric_limits<size_t>::max()};
     const Vector &vector;
     std::optional<std::conditional_t<copy, T, std::reference_wrapper<const T>>> key;
   };
 
   template <typename T>
   struct Linked {
-    static constexpr size_t null = SIZE_T_MAX;
+    static constexpr size_t null = std::numeric_limits<size_t>::max();
 
     auto add(const T &value, size_t next = null) {
       size_t i = nodes.size();
