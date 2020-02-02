@@ -8,4 +8,5 @@ target_compile_definitions(server PRIVATE
   )
 target_link_libraries(server
   Boost::system
+  gql
   )

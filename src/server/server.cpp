@@ -2,12 +2,27 @@
 
 #include "db/db.hpp"
 #include "format/format.hpp"
+#include "gql/service.hpp"
 #include "server/server.hpp"
 
 namespace bcx {
+  auto graphiqlHtml = format::readText("graphiql.html");
+
   Server::Server() : app(std::make_shared<OB::Belle::Server>()) {
     using OB::Belle::Method;
     constexpr auto kContentType = boost::beast::http::field::content_type;
+
+    app->public_dir("frontend");
+
+    app->on_http("/graphql", Method::get, [](auto &ctx) {
+      ctx.res.set(kContentType, "text/html");
+      ctx.res.body() = graphiqlHtml;
+    });
+
+    app->on_http("/graphql", Method::post, [](auto &ctx) {
+      ctx.res.set(kContentType, "application/json");
+      ctx.res.body() = gql(ctx.req.body());
+    });
 
     app->on_http("/health", Method::get, [](auto &ctx) {
       ctx.res.set(kContentType, "application/json");

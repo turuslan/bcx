@@ -3,6 +3,7 @@ add_subdirectory(db)
 add_subdirectory(ds)
 add_subdirectory(format)
 add_subdirectory(gen)
+add_subdirectory(gql)
 add_subdirectory(server)
 add_subdirectory(sync)
 
