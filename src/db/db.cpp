@@ -81,6 +81,10 @@ namespace bcx::db {
                  load_duration.count());
   }
 
+  void drop() {
+    truncate(0);
+  }
+
   auto txCreator(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
     return *account_id.find(payload.creator_account_id());
   }

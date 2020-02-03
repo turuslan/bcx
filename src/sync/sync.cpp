@@ -109,10 +109,17 @@ namespace bcx {
 
   void runSync(boost::asio::io_context &io) {
     IrohaApi api{*config.iroha};
+    iroha::protocol::Block block;
+    auto height = db::blockCount();
+    if (height != 0) {
+      if (!api.getBlock(block, height) || format::blockHash(block) != db::block_hash[height - 1]) {
+        db::drop();
+        fatal("Last cached block differs, invalidating block cache");
+      }
+    }
     logger::info("Sync start");
     auto stream = api.fetchCommits();
-    auto height = db::blockCount() + 1;
-    iroha::protocol::Block block;
+    ++height;
     while (api.getBlock(block, height)) {
       syncBlock(io, block);
       ++height;

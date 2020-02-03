@@ -33,6 +33,7 @@ namespace bcx::db {
   extern ds::Indirect<false, std::vector<EDKey>>::Hashed all_pub;
 
   void load();
+  void drop();
   void addBlock(const iroha::protocol::Block &block);
 
   size_t blockCount();
