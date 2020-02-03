@@ -1,6 +1,9 @@
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/executor_work_guard.hpp>
 #include <ed25519/ed25519.h>
 #include <grpcpp/grpcpp.h>
-#include <boost/asio/io_context.hpp>
+#include <queue>
+#include <thread>
 
 #include "db/db.hpp"
 #include "format/format.hpp"
@@ -8,6 +11,8 @@
 #include "sync/sync.hpp"
 
 namespace bcx {
+  constexpr auto kGetBlockThreads = 10u;
+
   struct IrohaApi {
     IrohaApi(const Config::Iroha &config)
         : service{grpc::CreateChannel(config.host,
@@ -99,41 +104,76 @@ namespace bcx {
     public_key_t ed_public_key;
   };
 
-  void syncBlock(boost::asio::io_context &io,
-                 const iroha::protocol::Block &block) {
-    io.post([block]() {
-      logger::info("Sync block {}", format::blockHeight(block));
-      db::addBlock(block);
-    });
-  }
+  struct BlockHeightLess {
+    auto operator()(const iroha::protocol::Block &lhs, const iroha::protocol::Block &rhs) const {
+      return format::blockHeight(lhs) > format::blockHeight(rhs);
+    }
+  };
 
   void runSync(boost::asio::io_context &io) {
     IrohaApi api{*config.iroha};
-    iroha::protocol::Block block;
-    auto height = db::blockCount();
-    if (height != 0) {
-      if (!api.getBlock(block, height) || format::blockHash(block) != db::block_hash[height - 1]) {
+    auto last_height = db::blockCount();
+    iroha::protocol::Block last_block;
+    if (last_height != 0) {
+      if (!api.getBlock(last_block, last_height) || format::blockHash(last_block) != db::block_hash[last_height - 1]) {
         db::drop();
         fatal("Last cached block differs, invalidating block cache");
       }
     }
+    auto next_height = last_height + 1;
     logger::info("Sync start");
-    auto stream = api.fetchCommits();
-    ++height;
-    while (api.getBlock(block, height)) {
-      syncBlock(io, block);
-      ++height;
+
+    std::priority_queue<iroha::protocol::Block, std::vector<iroha::protocol::Block>, BlockHeightLess> q;
+    auto postBlock = [&io, &q, &next_height](iroha::protocol::Block &&block) {
+      io.post([&q, &next_height, block=std::move(block)]() {
+        q.push(block);
+        while (!q.empty()) {
+          auto height = format::blockHeight(q.top());
+          if (height > next_height) {
+            break;
+          }
+          if (height == next_height) {
+            logger::info("Sync block {}", format::blockHeight(q.top()));
+            db::addBlock(q.top());
+            ++next_height;
+          }
+          q.pop();
+        }
+      });
+    };
+
+    boost::asio::io_context qio;
+    boost::asio::executor_work_guard qguard{qio.get_executor()};
+    std::vector<std::thread> qthreads;
+    for (auto i = 0u; i < kGetBlockThreads; ++i) {
+      qthreads.emplace_back([&qio]() { qio.run(); });
     }
-    io.post([block]() { logger::info("Sync wait for new blocks"); });
+    auto qheight_max = std::numeric_limits<size_t>::max();
+    auto stream = api.fetchCommits();
+    for (auto qheight = next_height; qheight < qheight_max; ++qheight) {
+      qio.post([&api, &postBlock, qheight, &qheight_max]() {
+        if (qheight >= qheight_max) {
+          return;
+        }
+        iroha::protocol::Block block;
+        if (api.getBlock(block, qheight)) {
+          postBlock(std::move(block));
+        } else {
+          qheight_max = std::min(qheight_max, qheight);
+        }
+      });
+    }
+    qguard.reset();
+    for (auto &thread : qthreads) {
+      thread.join();
+    }
+    io.post([]() { logger::info("Sync wait for new blocks"); });
     iroha::protocol::BlockQueryResponse res;
     while (stream.first->Read(&res)) {
       if (res.has_block_error_response()) {
         fatal("FetchCommits error {}", res.block_error_response().message());
       }
-      auto &res_block = res.block_response().block();
-      if (height <= format::blockHeight(res_block)) {
-        syncBlock(io, res_block);
-      }
+      postBlock(std::move(*res.mutable_block_response()->mutable_block()));
     }
     auto status = stream.first->Finish();
     if (!status.ok()) {
