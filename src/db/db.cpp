@@ -43,6 +43,38 @@ namespace bcx::db {
   DEFINE_STATIC(all_pub);
   static std::ofstream appender;
 
+  namespace genesis {
+    constexpr size_t domain = 0;
+    constexpr size_t account = 0;
+    constexpr auto name = "!genesis";
+
+    void check(const iroha::protocol::Block &block) {
+      if (format::blockHeight(block) == 1) {
+        for (auto &tx_out : block.block_v1().payload().transactions()) {
+          if (tx_out.payload().reduced_payload().creator_account_id().empty()) {
+            logger::warn("Genesis transaction creator empty, creating required stubs");
+
+            ++role_count;
+            role_name.push_back(name);
+            role_perms.push_back({});
+            constexpr size_t role = 0;
+
+            ++domain_count;
+            domain_id.push_back(name);
+            domain_role.push_back(role);
+            domain_tx_count.push_back(0);
+
+            ++account_count;
+            account_id.push_back(name);
+            account_quorum.push_back(0);
+
+            return;
+          }
+        }
+      }
+    }
+  }  // namespace genesis
+
   void truncate(size_t n) {
     block_bytes.truncate(n);
     std::ofstream(kBlockCache, std::ios::binary | std::ios::trunc)
@@ -86,11 +118,13 @@ namespace bcx::db {
   }
 
   auto txCreator(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
-    return *account_id.find(payload.creator_account_id());
+    auto &creator = payload.creator_account_id();
+    return creator.empty() ? genesis::account : *account_id.find(creator);
   }
 
   auto txCreatorDomain(const iroha::protocol::Transaction_Payload_ReducedPayload &payload) {
-    return *domain_id.find(format::domainOf(payload.creator_account_id()));
+    auto &creator = payload.creator_account_id();
+    return creator.empty() ? genesis::domain : *domain_id.find(format::domainOf(creator));
   }
 
   void addBlock(const iroha::protocol::Block &block) {
@@ -104,6 +138,7 @@ namespace bcx::db {
       appender.write(bytes.data(), bytes.size());
       appender.flush();
     }
+    genesis::check(block);
     auto block_i = block_count++;
     auto &block_payload = block.block_v1().payload();
     block_hash.push_back(format::blockHash(block));
