@@ -1,3 +1,4 @@
+#include <csignal>
 #include <thread>
 
 #include "db/db.hpp"
@@ -5,7 +6,13 @@
 #include "server/server.hpp"
 #include "sync/sync.hpp"
 
+void signalSigint(int) {
+  exit(0);
+}
+
 int main() {
+  signal(SIGINT, signalSigint);
+
   bcx::config.load();
   bcx::db::load();
   bcx::Server server;

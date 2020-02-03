@@ -75,6 +75,10 @@ namespace bcx::db {
     }
   }  // namespace genesis
 
+  void flush() {
+    appender.flush();
+  }
+
   void truncate(size_t n) {
     block_bytes.truncate(n);
     std::ofstream(kBlockCache, std::ios::binary | std::ios::trunc)
@@ -104,6 +108,7 @@ namespace bcx::db {
       addBlock(block);
     }
     appender.open(kBlockCache, std::ios::binary | std::ios::app);
+    atexit(flush);
 
     auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::system_clock::now() - load_start_time);
@@ -136,7 +141,6 @@ namespace bcx::db {
       auto bytes = block.SerializeAsString();
       block_bytes.push_back(bytes);
       appender.write(bytes.data(), bytes.size());
-      appender.flush();
     }
     genesis::check(block);
     auto block_i = block_count++;
