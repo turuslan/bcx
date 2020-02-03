@@ -8,7 +8,7 @@
 namespace bcx {
   auto graphiqlHtml = format::readText("graphiql.html");
 
-  Server::Server() : app(std::make_shared<OB::Belle::Server>()) {
+  Server::Server() : app(std::make_shared<OB::Belle::Server>("0.0.0.0", 4000)) {
     using OB::Belle::Method;
     constexpr auto kContentType = boost::beast::http::field::content_type;
 
