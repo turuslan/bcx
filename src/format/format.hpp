@@ -36,6 +36,8 @@ namespace bcx {
 
     size_t blockHeight(const iroha::protocol::Block &block);
 
+    Sha256 blockHash(const iroha::protocol::Block &block);
+
     std::vector<Byte> readBytes(const std::string &path);
 
     std::string readText(const std::string &path);

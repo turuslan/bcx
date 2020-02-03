@@ -46,6 +46,10 @@ namespace bcx {
       return block.block_v1().payload().height();
     }
 
+    Sha256 blockHash(const iroha::protocol::Block &block) {
+      return sha256(block.block_v1().payload().SerializeAsString());
+    }
+
     template <typename C>
     C read(const std::string &path) {
       std::ifstream file(path, std::ios::binary | std::ios::ate);

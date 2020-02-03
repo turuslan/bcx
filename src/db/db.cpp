@@ -102,7 +102,7 @@ namespace bcx::db {
     }
     auto block_i = block_count++;
     auto &block_payload = block.block_v1().payload();
-    block_hash.push_back(format::sha256(block_payload.SerializeAsString()));
+    block_hash.push_back(format::blockHash(block));
     block_time.push_back(block_payload.created_time());
     block_tx_count.push_back(block_payload.transactions_size());
     format::getTxCmd(tx_cmds, block_bytes[block_i]);
