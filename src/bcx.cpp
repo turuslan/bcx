@@ -6,12 +6,13 @@
 #include "server/server.hpp"
 #include "sync/sync.hpp"
 
-void signalSigint(int) {
+void signalExit(int) {
   exit(0);
 }
 
 int main() {
-  signal(SIGINT, signalSigint);
+  signal(SIGINT, signalExit);
+  signal(SIGTERM, signalExit);
 
   bcx::config.load();
   bcx::db::load();
