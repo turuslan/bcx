@@ -12,6 +12,7 @@
 
 namespace bcx {
   constexpr auto kGetBlockThreads = 10u;
+  constexpr auto kGetBlockQueue = 30u;
 
   struct IrohaApi {
     IrohaApi(const Config::Iroha &config)
@@ -124,8 +125,8 @@ namespace bcx {
     logger::info("Sync start");
 
     std::priority_queue<iroha::protocol::Block, std::vector<iroha::protocol::Block>, BlockHeightLess> q;
-    auto postBlock = [&io, &q, &next_height](iroha::protocol::Block &&block) {
-      io.post([&q, &next_height, block=std::move(block)]() {
+    auto postBlock = [&](iroha::protocol::Block &&block) {
+      io.post([&, block=std::move(block)]() {
         q.push(block);
         while (!q.empty()) {
           auto height = format::blockHeight(q.top());
@@ -142,29 +143,41 @@ namespace bcx {
       });
     };
 
-    boost::asio::io_context qio;
-    boost::asio::executor_work_guard qguard{qio.get_executor()};
-    std::vector<std::thread> qthreads;
+    boost::asio::io_context wio;
+    boost::asio::executor_work_guard wguard{wio.get_executor()};
+    std::vector<std::thread> wthreads;
     for (auto i = 0u; i < kGetBlockThreads; ++i) {
-      qthreads.emplace_back([&qio]() { qio.run(); });
+      wthreads.emplace_back([&]() { wio.run(); });
     }
+    auto qheight = next_height;
     auto qheight_max = std::numeric_limits<size_t>::max();
     auto stream = api.fetchCommits();
-    for (auto qheight = next_height; qheight < qheight_max; ++qheight) {
-      qio.post([&api, &postBlock, qheight, &qheight_max]() {
-        if (qheight >= qheight_max) {
-          return;
-        }
-        iroha::protocol::Block block;
-        if (api.getBlock(block, qheight)) {
-          postBlock(std::move(block));
-        } else {
-          qheight_max = std::min(qheight_max, qheight);
-        }
-      });
+    boost::asio::io_context qio;
+    boost::asio::executor_work_guard qguard{qio.get_executor()};
+    auto qjob = [&](const auto &qjob2) -> void {
+      if (qheight >= qheight_max) {
+        qio.stop();
+      } else {
+        wio.post([&, qheight]() {
+          if (qheight < qheight_max) {
+            iroha::protocol::Block block;
+            if (api.getBlock(block, qheight)) {
+              postBlock(std::move(block));
+            } else {
+              qheight_max = std::min(qheight_max, qheight);
+            }
+            qio.post([&]() { qjob2(qjob2); });
+          }
+        });
+        ++qheight;
+      }
+    };
+    for (auto i = 0; i < kGetBlockQueue; ++i) {
+      qjob(qjob);
     }
-    qguard.reset();
-    for (auto &thread : qthreads) {
+    qio.run();
+    wguard.reset();
+    for (auto &thread : wthreads) {
       thread.join();
     }
     io.post([]() { logger::info("Sync wait for new blocks"); });
