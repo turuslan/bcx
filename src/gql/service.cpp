@@ -9,7 +9,9 @@ namespace bcx {
 
   std::string gql(const std::string &body) {
     using graphql::response::Value;
-    auto jbody = rapidjson::Document().Parse(body).GetObject();
+    rapidjson::Document jdoc;
+    jdoc.Parse(body);
+    auto jbody = jdoc.GetObject();
     Value vars{graphql::response::Type::Map};
     if (jbody.HasMember("variables")) {
       auto &jvars = jbody["variables"];
