@@ -26,9 +26,6 @@ jobs:
         rm -rf $VCPKG_INSTALLATION_ROOT/installed
         ln -s `pwd`/vcpkg-installed $VCPKG_INSTALLATION_ROOT/installed
     - name: cmake
-      env:
-        CC: clang
-        CXX: clang++
       run: cmake . -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake
     - name: build
       run: |
