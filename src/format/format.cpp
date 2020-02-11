@@ -4,6 +4,7 @@
 #include <google/protobuf/util/time_util.h>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <fstream>
 
@@ -235,6 +236,12 @@ namespace bcx {
           *iroha_account_key,
       };
     }
+
+    auto data_dir = boost::filesystem::path{getenv("DATA_DIR", ".")};
+    if (!boost::filesystem::is_directory(data_dir)) {
+      fatal("DATA_DIR is not a directory");
+    }
+    block_cache_path = data_dir.append("block.cache").string();
   }
 
   bool Config::disable_sync() const {

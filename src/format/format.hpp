@@ -80,6 +80,7 @@ namespace bcx {
     bool disable_sync() const;
 
     std::optional<Iroha> iroha;
+    std::string block_cache_path;
   };
 
   extern Config config;

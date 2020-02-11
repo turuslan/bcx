@@ -81,14 +81,14 @@ namespace bcx::db {
 
   void truncate(size_t n) {
     block_bytes.truncate(n);
-    std::ofstream(kBlockCache, std::ios::binary | std::ios::trunc)
+    std::ofstream(config.block_cache_path, std::ios::binary | std::ios::trunc)
         .write(b2c(block_bytes.bytes.data()), block_bytes.bytes.size());
   }
 
   void load() {
     auto load_start_time = std::chrono::system_clock::now();
 
-    block_bytes.bytes = format::readBytes(kBlockCache);
+    block_bytes.bytes = format::readBytes(config.block_cache_path);
     format::splitPb(block_bytes.len, bv2sv(block_bytes.bytes), iroha::protocol::Block::kBlockV1);
     auto extra = block_bytes.bytes.size() - block_bytes.size_bytes();
     if (extra) {
@@ -107,7 +107,7 @@ namespace bcx::db {
       }
       addBlock(block);
     }
-    appender.open(kBlockCache, std::ios::binary | std::ios::app);
+    appender.open(config.block_cache_path, std::ios::binary | std::ios::app);
     atexit(flush);
 
     auto load_duration = std::chrono::duration_cast<std::chrono::seconds>(
